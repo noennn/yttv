@@ -1,44 +1,43 @@
 /*TTDUMP-START*/
 ;(function(){
-  var SEQ=0,NSNAP=0,LASTF='';
-  function out(s){
-    s=String(s);
-    for(var i=0;i<s.length;i+=450){
-      try{console.log('TTDUMP|'+(SEQ++)+'|'+s.slice(i,i+450));}catch(e){}
-    }
+  var V='LSDUMP1';
+  function store(o){
+    try{
+      var n=-1;
+      for(var i=0;i<40;i++){if(!localStorage.getItem('ttd.'+i)){n=i;break;}}
+      if(n<0){for(var i=0;i<20;i++)localStorage.removeItem('ttd.'+(i*2));n=0;}
+      o.v=V;
+      localStorage.setItem('ttd.'+n,JSON.stringify(o));
+    }catch(e){}
   }
   function snap(tag,full){
     try{
-      if(tag==='focus'){NSNAP++;if(NSNAP>14)return;}
       var f=document.querySelector(':focus');
-      var info={tag:tag,url:location.href};
+      var o={tag:tag,u:location.href.slice(0,90)};
       var ch=[],el=f;
-      for(var i=0;i<10&&el;i++){
-        ch.push('<'+el.tagName.toLowerCase()+(el.id?'#'+el.id:'')+'|'+String(el.className||'').slice(0,50)+'>');
-        el=el.parentElement;
-      }
-      info.focusChain=ch.join(' ');
-      if(f){info.focusHTML=String(f.outerHTML).slice(0,1800);}
+      for(var i=0;i<10&&el;i++){ch.push('<'+el.tagName.toLowerCase()+(el.id?'#'+el.id:'')+'|'+String(el.className||'').slice(0,50)+'>');el=el.parentElement;}
+      o.chain=ch.join(' ');
+      if(f){o.html=String(f.outerHTML).slice(0,1500);}
       var tops=[];
-      for(var i=0;i<document.body.children.length&&i<15;i++){
+      for(var i=0;i<document.body.children.length&&i<12;i++){
         var c=document.body.children[i],cs=getComputedStyle(c);
-        tops.push(c.tagName+'|'+String(c.className||'').slice(0,30)+'|bg='+cs.backgroundColor+'|img='+(cs.backgroundImage||'n').slice(0,80)+'|z='+cs.zIndex);
+        tops.push(c.tagName+'|'+String(c.className||'').slice(0,30)+'|bg='+cs.backgroundColor+'|z='+cs.zIndex);
       }
-      info.tops=tops.join(' ;; ');
+      o.tops=tops.join(' ;; ');
       var imgs=[],all=document.images;
-      for(var i=0;i<all.length&&i<12;i++){imgs.push(String(all[i].currentSrc||all[i].src).slice(0,110));}
-      info.imgs=imgs.join(' ;; ');
-      if(full){info.bodyHTML=String(document.body.innerHTML).slice(0,1200);}
-      out(JSON.stringify(info));
-    }catch(e){out('ERR '+e);}
+      for(var i=0;i<all.length&&i<14;i++){imgs.push(String(all[i].currentSrc||all[i].src).slice(0,120));}
+      o.imgs=imgs.join(' ;; ');
+      if(full){o.body=String(document.body.innerHTML).slice(0,1100);}
+      store(o);
+    }catch(e){try{store({tag:'err',e:String(e).slice(0,200)})}catch(_){}}
   }
   setTimeout(function(){snap('boot8',1)},8000);
   setTimeout(function(){snap('boot16',1)},16000);
-  var deb;
+  var deb,last='';
   document.addEventListener('focusin',function(){
     clearTimeout(deb);deb=setTimeout(function(){
-      var f=document.querySelector(':focus'),k=f?String(f.outerHTML).slice(0,300):'';
-      if(k===LASTF)return;LASTF=k;snap('focus',0);
+      var f=document.querySelector(':focus'),k=f?String(f.outerHTML).slice(0,250):'';
+      if(k===last)return;last=k;snap('focus',0);
     },250);
   });
 })();
